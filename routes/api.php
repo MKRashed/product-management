@@ -6,6 +6,7 @@ use App\Http\Controllers\Customer;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,8 @@ Route::get('/user', function (Request $request) {
 
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+
+    Route::get('/app-data', [UserController::class, 'index']);
 
     Route::resource('products', ProductController::class);
     Route::resource('orders', OrderController::class);
