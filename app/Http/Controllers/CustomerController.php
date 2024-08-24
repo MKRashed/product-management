@@ -22,11 +22,22 @@ class CustomerController extends Controller
     }
 
 
+
     public function store(CustomerRequest $request)
     {
         $customer = Customer::create($request->validated());
 
         return response()->json($customer, 201);
+    }
+
+    public function edit($id)
+    {
+
+        $customer = Customer::find($id);
+
+        return response([
+            'customer' => $customer
+        ], 200);
     }
 
 

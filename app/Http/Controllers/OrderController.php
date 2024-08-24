@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Exports\OrdersExport;
 use App\Http\Requests\OrderRequest;
 use App\Imports\OrdersImport;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
@@ -16,10 +18,23 @@ class OrderController extends Controller
 
     public function index()
     {
-        $orders = Order::all();
+        $orders = Order::with('customer', 'orderItems')->get();
 
         return response([
             'orders' => $orders
+        ], 200);
+    }
+
+
+    public function  create()
+    {
+        $customers = Customer::get(['first_name', 'last_name', 'id']);
+
+        $products = Product::all();
+
+        return response([
+            'customers' => $customers,
+            'products' => $products
         ], 200);
     }
 
@@ -59,6 +74,15 @@ class OrderController extends Controller
             DB::rollBack();
             return response()->json(['error' => 'Failed to create order.'], 500);
         }
+    }
+
+    public function edit($id)
+    {
+        $order = Order::find($id);
+
+        return response([
+            'order' => $order
+        ], 200);
     }
 
 
@@ -113,8 +137,8 @@ class OrderController extends Controller
         }
     }
 
-  
-    
+
+
     public function destroy(string $id)
     {
 

@@ -36,11 +36,16 @@ class ProductController extends Controller
         return response()->json($product, 201);
     }
 
+    public function edit($id)
+    {
+        $product = Product::find($id);
+
+        return response([
+            'product' => $product
+        ], 200);
+    }
 
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $validatedData = $request->validate([
