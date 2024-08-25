@@ -50,9 +50,10 @@ class OrderController extends Controller
 
             $order = Order::create($validated);
 
-            $items = $request->items;
+            $items = $request->selectedItem;
 
             foreach ($items as $item) {
+
                 if (is_string($item)) {
                     $item = json_decode($item, true);
                 }
@@ -61,7 +62,7 @@ class OrderController extends Controller
                     'order_id'   => $order->id,
                     'product_id' => $item['product_id'],
                     'quantity'   => $item['quantity'],
-                    'price'      => $item['price'],
+                    'price'      => $item['subtotal'],
                 ]);
             }
 
@@ -81,7 +82,7 @@ class OrderController extends Controller
         $order = Order::find($id);
 
         return response([
-            'order' => $order
+            'order' => $order->load('orderItems', 'customer')
         ], 200);
     }
 
@@ -92,10 +93,10 @@ class OrderController extends Controller
             'customer_id'    => 'sometimes|required',
             'total_amount'   => 'sometimes|required|numeric',
             'status'         => 'sometimes|nullable|boolean',
-            'items'          => 'sometimes|array',
-            'items.*.product_id' => 'required_with:items|exists:products,id',
-            'items.*.quantity'   => 'required_with:items|numeric|min:1',
-            'items.*.price'      => 'required_with:items|numeric|min:0',
+            'selectedItem'          => 'sometimes|array',
+            'selectedItem.*.product_id' => 'required_with:selectedItem|exists:products,id',
+            'selectedItem.*.quantity'   => 'required_with:selectedItem|numeric|min:1',
+            'selectedItem.*.subtotal'      => 'required_with:selectedItem|numeric|min:0',
         ]);
 
         $order = Order::find($id);
@@ -112,17 +113,21 @@ class OrderController extends Controller
                 return !is_null($value);
             });
 
-            $order->update($dataToUpdate);
+            $order->update([
+                'status' => $dataToUpdate['status'],
+                'total_amount' => $dataToUpdate['total_amount']
+            ]);
 
-            if (isset($validatedData['items'])) {
+
+            if (isset($validatedData['selectedItem'])) {
                 OrderItem::where('order_id', $order->id)->delete();
+                foreach ($validatedData['selectedItem'] as $item) {
 
-                foreach ($validatedData['items'] as $item) {
                     OrderItem::create([
                         'order_id'   => $order->id,
                         'product_id' => $item['product_id'],
                         'quantity'   => $item['quantity'],
-                        'price'      => $item['price'],
+                        'price'      => $item['subtotal'],
                     ]);
                 }
             }
